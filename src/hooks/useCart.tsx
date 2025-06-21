@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-
+import type { ReactNode } from "react";
 export type CartItem = {
   id: number;
   name: string;
@@ -18,7 +18,7 @@ type CartContextType = {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function CartProvider({ children }: { children: any }) {
+export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   const addToCart = (item: CartItem) => {

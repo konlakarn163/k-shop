@@ -1,5 +1,10 @@
+import type { ReactNode } from "react";
 import { CartProvider } from "./hooks/useCart";
 
-export default function AppProviders({ children: any }) {
+type Props = {
+  children: ReactNode;
+};
+
+export default function AppProviders({ children }: Props) {
   return <CartProvider>{children}</CartProvider>;
 }
