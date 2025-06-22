@@ -17,7 +17,7 @@ export default function Checkout() {
     document.title = "Beta shop | Checkout";
   }, []);
 
-  const { cartItems } = useCart();
+  const { cartItems, clearCart } = useCart();
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
   // ข้อมูล Address
@@ -91,7 +91,10 @@ export default function Checkout() {
         variant: "success",
       }
     );
-    navigate("/");
+    setTimeout(() => {
+      clearCart()
+      navigate("/payment-complete");
+    }, 500);
   };
 
   return (

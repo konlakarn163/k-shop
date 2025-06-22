@@ -16,6 +16,7 @@ type CartContextType = {
   addToCart: (item: CartItem) => void;
   updateIncreaseQuantity: (productId: number, newQty: number) => void;
   updateDecreaseQuantity: (productId: number, newQty: number) => void;
+  clearCart: () => void;
   removeFromCart: (productId: number) => void;
 };
 
@@ -24,7 +25,7 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const { enqueueSnackbar } = useSnackbar();
-
+  const clearCart = () => setCartItems([]);
   const addToCart = (item: CartItem) => {
     let showMessage = "";
     let variant: "warning" | "success" = "success";
@@ -103,6 +104,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         updateIncreaseQuantity,
         updateDecreaseQuantity,
         removeFromCart,
+        clearCart
       }}
     >
       {children}
