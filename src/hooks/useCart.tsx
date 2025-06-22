@@ -1,55 +1,109 @@
 import { createContext, useContext, useState } from "react";
+import { useSnackbar } from "notistack";
 import type { ReactNode } from "react";
+
 export type CartItem = {
   id: number;
   name: string;
   price: number;
   image: string;
   quantity: number;
+  stock: number;
 };
 
 type CartContextType = {
   cartItems: CartItem[];
   addToCart: (item: CartItem) => void;
-  updateQuantity: (productId: number, newQty: number) => void;
-  removeFromCart: (productId: number, newQty: number) => void;
+  updateIncreaseQuantity: (productId: number, newQty: number) => void;
+  updateDecreaseQuantity: (productId: number, newQty: number) => void;
+  removeFromCart: (productId: number) => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { enqueueSnackbar } = useSnackbar();
 
   const addToCart = (item: CartItem) => {
+    let showMessage = "";
+    let variant: "warning" | "success" = "success";
+
     setCartItems((prev) => {
       const exist = prev.find((p) => p.id === item.id);
       if (exist) {
+        const newQty = exist.quantity + item.quantity;
+        if (newQty > item.stock) {
+          showMessage = "You cannot add more than the available stock.";
+          variant = "warning";
+          return prev;
+        }
         return prev.map((p) =>
-          p.id === item.id ? { ...p, quantity: p.quantity + item.quantity } : p
+          p.id === item.id ? { ...p, quantity: newQty } : p
         );
       } else {
+        if (item.quantity > item.stock) {
+          showMessage = "You cannot add more than the available stock.";
+          variant = "warning";
+          return prev;
+        }
         return [...prev, item];
       }
     });
-  };
-  const updateQuantity = (productId: number, newQty: number) => {
-    if (newQty <= 0) {
-      setCartItems((prev) => prev.filter((item) => item.id !== productId));
-    } else {
-      setCartItems((prev) =>
-        prev.map((item) =>
-          item.id === productId ? { ...item, quantity: newQty } : item
-        )
-      );
+
+    if (showMessage) {
+      enqueueSnackbar(showMessage, { variant });
     }
   };
+
+  const updateIncreaseQuantity = (productId: number, newQty: number) => {
+    let showMessage = "";
+    let variant: "warning" | "success" = "success";
+
+    setCartItems((prev) => {
+      const item = prev.find((item) => item.id === productId);
+      if (!item) return prev;
+
+      if (newQty > item.stock) {
+        showMessage = "You cannot add more than the available stock.";
+        variant = "warning";
+        return prev;
+      }
+
+      return prev.map((item) =>
+        item.id === productId ? { ...item, quantity: newQty } : item
+      );
+    });
+
+    if (showMessage) {
+      enqueueSnackbar(showMessage, { variant });
+    }
+  };
+
+  const updateDecreaseQuantity = (productId: number, newQty: number) => {
+    setCartItems((prev) => {
+      const item = prev.find((item) => item.id === productId);
+      if (!item) return prev;
+      return prev.map((item) =>
+        item.id === productId ? { ...item, quantity: newQty } : item
+      );
+    });
+  };
+
   const removeFromCart = (productId: number) => {
     setCartItems((prev) => prev.filter((item) => item.id !== productId));
+    enqueueSnackbar("Item removed from cart.", { variant: "info" });
   };
+
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, updateQuantity, removeFromCart }}
+      value={{
+        cartItems,
+        addToCart,
+        updateIncreaseQuantity,
+        updateDecreaseQuantity,
+        removeFromCart,
+      }}
     >
       {children}
     </CartContext.Provider>

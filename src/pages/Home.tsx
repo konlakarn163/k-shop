@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
   Menu,
@@ -16,8 +16,10 @@ import { useSearchParams } from "react-router-dom";
 import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
 
 export default function HomePage() {
+  useEffect(() => {
+    document.title = "Beta shop | Home";
+  }, []);
   const { addToCart } = useCart();
-
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [sortOption, setSortOption] = useState<string>("");
@@ -41,7 +43,7 @@ export default function HomePage() {
     setSortOption(event.target.value);
   };
 
-  // Filter + Sort
+  // Filter + Sort (Products)
   let filteredProducts = [...products];
   if (categoryFilter !== "all") {
     filteredProducts = filteredProducts.filter(
@@ -76,7 +78,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Product Grid */}
+      {/* Product */}
       <section className="container mx-auto py-12 px-4">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">Products</h2>
@@ -123,7 +125,7 @@ export default function HomePage() {
               <Link
                 to={`/product/${item.id}`}
                 key={i}
-                className="border-2 p-4 rounded-xl hover:shadow-lg transition block group"
+                className="border-2 p-2 sm:p-4 rounded-xl hover:shadow-lg transition block group"
               >
                 <div className="bg-white h-24 md:h-36 xl:h-48 rounded-xl mb-4 overflow-hidden flex justify-center items-center">
                   <img
@@ -132,16 +134,18 @@ export default function HomePage() {
                     alt={`${item?.category}-${item.imageOne}`}
                   />
                 </div>
-                <h3 className="text-sm sm:text-md lg:text-lg font-medium mb-1 leading-1 truncate">{item?.name}</h3>
+                <h3 className="text-sm sm:text-md lg:text-lg font-medium mb-1 leading-1 truncate">
+                  {item?.name}
+                </h3>
                 <p className="text-sm text-gray-500 mb-2">{item?.category}</p>
                 <div className="flex justify-between items-center">
                   <span className="text-sm sm:text-md lg:text-lg font-semibold">
                     {formatTHB(item?.price)}
                   </span>
                   <Button
-                    variant="outlined"
+                    variant="contained"
                     size="small"
-                    sx={{ fontSize: { xs: '0.75rem', md: '1.125rem' } }}
+                    sx={{ fontSize: { xs: "0.7rem", md: "0.7rem" } }}
                     onClick={(e) => {
                       e.preventDefault();
                       addToCart({
@@ -150,10 +154,11 @@ export default function HomePage() {
                         quantity: 1,
                         price: item?.price || 0,
                         image: `${item?.imageOne}`,
+                        stock: item.quantity,
                       });
                     }}
                   >
-                    Add
+                    ADD TO CART
                   </Button>
                 </div>
               </Link>

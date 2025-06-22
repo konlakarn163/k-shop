@@ -51,9 +51,10 @@ export default function RecommendedProducts() {
                   quantity: 1,
                   price: item.price,
                   image: item.imageOne,
+                  stock: item.quantity
                 })
               }
-              variant="outlined"
+              variant="contained"
               size="small"
               fullWidth
               className="mt-2"

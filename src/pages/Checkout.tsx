@@ -1,5 +1,5 @@
 import { useCart } from "../hooks/useCart";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   TextField,
   Button,
@@ -11,12 +11,16 @@ import {
   FormLabel,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-
+import { useSnackbar } from "notistack";
 export default function Checkout() {
+  useEffect(() => {
+    document.title = "Beta shop | Checkout";
+  }, []);
+
   const { cartItems } = useCart();
   const navigate = useNavigate();
-
-  // ข้อมูลลูกค้า
+  const { enqueueSnackbar } = useSnackbar();
+  // ข้อมูล Address
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -28,7 +32,7 @@ export default function Checkout() {
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
 
-  // Error states
+  // ERROR STATE
   const [errors, setErrors] = useState<{
     name?: string;
     phone?: string;
@@ -44,7 +48,6 @@ export default function Checkout() {
     0
   );
 
-  // Validation ฟังก์ชันเหมือนเดิม
   const isValidPhone = (phone: string) =>
     /^\d{9,15}$/.test(phone.replace(/\D/g, ""));
   const isValidCardNumber = (number: string) =>
@@ -82,7 +85,12 @@ export default function Checkout() {
       return;
     }
 
-    alert(`Payment method: ${paymentMethod.toUpperCase()} \nTotal: ฿${total}`);
+    enqueueSnackbar(
+      `Success: ${paymentMethod.toUpperCase()} \nTotal: ฿${total}`,
+      {
+        variant: "success",
+      }
+    );
     navigate("/");
   };
 

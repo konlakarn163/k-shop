@@ -55,3 +55,8 @@ button:focus-visible {
 html, body {
   @apply text-gray-700
 }
+
+
+.notistack-SnackbarContainer {
+  @apply md:!top-[80px]
+}

@@ -1,27 +1,34 @@
 import { useCart } from "../hooks/useCart";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ShoppingCartTwoToneIcon from "@mui/icons-material/ShoppingCartTwoTone";
-import { IconButton, Typography } from "@mui/material";
+import { IconButton, Typography, Button } from "@mui/material";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
 import { formatTHB } from "../utils/formatCurrency";
 import DeleteIcon from "@mui/icons-material/Delete";
-
+import { useEffect } from "react";
 export default function Cart() {
-  const { updateQuantity } = useCart();
-  const { cartItems } = useCart();
+  useEffect(() => {
+    document.title = "Beta shop | Cart";
+  }, []);
+  const {
+    updateIncreaseQuantity,
+    updateDecreaseQuantity,
+    removeFromCart,
+    cartItems,
+  } = useCart();
   const total = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0
   );
 
   const handleDecrease = (id: number, quantity: number) => {
-    updateQuantity(id, quantity - 1);
+    updateDecreaseQuantity(id, quantity - 1);
   };
   const handleIncrease = (id: number, quantity: number) => {
-    updateQuantity(id, quantity + 1);
+    updateIncreaseQuantity(id, quantity + 1);
   };
-
+  const navigate = useNavigate();
   return (
     <div className="container mx-auto">
       <div className="p-8">
@@ -30,8 +37,17 @@ export default function Cart() {
           <p className="text-black">MY CART</p>
         </h2>
         {cartItems.length === 0 ? (
-          <div className="p-8 flex justify-center items-center  rounded-lg">
+          <div className="p-8 flex flex-col gap-4 justify-center items-center  rounded-lg">
             <p className="text-gray-500">No products in the cart.</p>
+            <Button
+              size="small"
+              onClick={() => {
+                navigate("/");
+              }}
+              variant="contained"
+            >
+              GO SHOPPING
+            </Button>
           </div>
         ) : (
           <div>
@@ -71,7 +87,11 @@ export default function Cart() {
                     </div>
                     <div className="flex items-center justify-between ">
                       <div className="mr-4">
-                        <IconButton aria-label="delete" className="!text-red-400 hover:!text-red-600">
+                        <IconButton
+                          aria-label="delete"
+                          onClick={() => removeFromCart(item.id)}
+                          className="!text-red-400 hover:!text-red-600"
+                        >
                           <DeleteIcon />
                         </IconButton>
                       </div>
