@@ -1,13 +1,15 @@
-import { CheckCircleOutline } from "@mui/icons-material";
-import { Button, Typography, Paper } from "@mui/material";
-import { Link } from "react-router-dom";
 import { useEffect } from "react";
-const PaymentComplete = () => {
+import { CheckCircleOutline } from "@mui/icons-material";
+import { Button, Typography } from "@mui/material";
+import { Link } from "react-router-dom";
+
+function PaymentComplete() {
   useEffect(() => {
     document.title = "Beta shop | Status";
   }, []);
+
   return (
-    <div className="flex my-auto h-full  items-center justify-center bg-gray-50 p-4">
+    <div className="flex my-auto h-full items-center justify-center bg-gray-50 p-4">
       <div className="p-6 rounded-2xl border my-10 max-w-md w-full text-center bg-white shadow py-10 flex flex-col items-center justify-center gap-4">
         <CheckCircleOutline sx={{ fontSize: 60, color: "green" }} />
         <Typography variant="h5" className="mt-4 font-semibold">
@@ -26,6 +28,6 @@ const PaymentComplete = () => {
       </div>
     </div>
   );
-};
+}
 
 export default PaymentComplete;
