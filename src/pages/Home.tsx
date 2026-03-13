@@ -1,256 +1,254 @@
-import { useState, useEffect } from "react";
-import {
-  Button,
-  Menu,
-  MenuItem,
-  Select,
-  FormControl,
-  InputLabel,
-} from "@mui/material";
-import type { SelectChangeEvent } from "@mui/material/Select";
-import { Link } from "react-router-dom";
-import { useCart } from "../hooks/useCart";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Filter, Search, Sparkles } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Pagination } from "swiper/modules";
+import gsap from "gsap";
 import products from "../utils/mockProducts";
+import { useCart } from "../hooks/useCart";
 import { formatTHB } from "../utils/formatCurrency";
-import { useSearchParams } from "react-router-dom";
-import SentimentDissatisfiedIcon from "@mui/icons-material/SentimentDissatisfied";
+import SiteFooter from "../components/SiteFooter";
+import { applyImageFallback, resolveImageSrc } from "../utils/resolveImage";
+
+type SortValue = "" | "priceLowHigh" | "priceHighLow" | "category";
+
+const heroSlides = [
+  {
+    id: 1,
+    title: "Spring-Summer Edit",
+    subtitle: "New silhouettes for city and resort days",
+    cta: "Shop New Arrivals",
+    to: "/",
+    classes: "bg-white",
+  },
+  {
+    id: 2,
+    title: "Tailored Essentials",
+    subtitle: "Refined pieces made for everyday elegance",
+    cta: "Explore Collection",
+    to: "/",
+    classes: "bg-white",
+  },
+  {
+    id: 3,
+    title: "Accessories Story",
+    subtitle: "Bags and shoes crafted for standout looks",
+    cta: "Discover Accessories",
+    to: "/",
+    classes: "bg-white",
+  },
+];
 
 export default function HomePage() {
-  useEffect(() => {
-    document.title = "Beta shop | Home";
-  }, []);
   const { addToCart } = useCart();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [sortOption, setSortOption] = useState<string>("");
   const [searchParams] = useSearchParams();
-  const searchQuery = searchParams.get("search")?.toLowerCase() || "";
-  const open = Boolean(anchorEl);
+  const [sortOption, setSortOption] = useState<SortValue>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const heroRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
-  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  const searchQuery = searchParams.get("search")?.toLowerCase().trim() || "";
 
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
+  useEffect(() => {
+    document.title = "K Shop | Home";
+  }, []);
 
-  const handleCategoryChange = (event: SelectChangeEvent) => {
-    setCategoryFilter(event.target.value);
-  };
+  useLayoutEffect(() => {
+    if (!heroRef.current || !listRef.current) {
+      return;
+    }
 
-  const handleSortChange = (event: SelectChangeEvent) => {
-    setSortOption(event.target.value);
-  };
+    const ctx = gsap.context(() => {
+      gsap.from(".hero-content", {
+        y: 36,
+        opacity: 0,
+        duration: 0.8,
+        ease: "power3.out",
+        stagger: 0.08,
+      });
 
-  // Filter + Sort (Products)
-  let filteredProducts = [...products];
-  if (categoryFilter !== "all") {
-    filteredProducts = filteredProducts.filter(
-      (p) => p.category === categoryFilter
-    );
-  }
+      gsap.from(".product-card", {
+        y: 30,
+        opacity: 0,
+        duration: 0.7,
+        ease: "power2.out",
+        stagger: 0.06,
+        delay: 0.2,
+      });
+    }, heroRef);
 
-  if (searchQuery) {
-    filteredProducts = filteredProducts.filter((p) =>
-      p.name.toLowerCase().includes(searchQuery)
-    );
-  }
+    return () => {
+      ctx.revert();
+    };
+  }, []);
 
-  if (sortOption === "priceLowHigh") {
-    filteredProducts.sort((a, b) => a.price - b.price);
-  } else if (sortOption === "priceHighLow") {
-    filteredProducts.sort((a, b) => b.price - a.price);
-  } else if (sortOption === "category") {
-    filteredProducts.sort((a, b) => a.category.localeCompare(b.category));
-  }
+  const categories = useMemo(() => {
+    return ["all", ...Array.from(new Set(products.map((item) => item.category)))];
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    let output = [...products];
+
+    if (categoryFilter !== "all") {
+      output = output.filter((item) => item.category === categoryFilter);
+    }
+
+    if (searchQuery) {
+      output = output.filter((item) =>
+        item.name.toLowerCase().includes(searchQuery)
+      );
+    }
+
+    if (sortOption === "priceLowHigh") {
+      output.sort((a, b) => a.price - b.price);
+    }
+    if (sortOption === "priceHighLow") {
+      output.sort((a, b) => b.price - a.price);
+    }
+    if (sortOption === "category") {
+      output.sort((a, b) => a.category.localeCompare(b.category));
+    }
+
+    return output;
+  }, [categoryFilter, searchQuery, sortOption]);
 
   return (
-    <div className="bg-white text-gray-800">
-      {/* Hero Banner */}
-      <section className="bg-gray-100 text-center relative">
-        <div className="w-full overflow-hidden">
-          <img
-            src="/images/banner-elec.jpg"
-            alt="Banner"
-            className="max-h-[490px] w-full object-cover"
-          />
-        </div>
+    <div className="bg-white text-stone-800">
+      <section ref={heroRef} className="border-b border-stone-200">
+        <Swiper
+          modules={[Autoplay, Pagination]}
+          autoplay={{ delay: 4800, disableOnInteraction: false }}
+          loop
+          pagination={{ clickable: true }}
+          className="fashion-swiper"
+        >
+          {heroSlides.map((slide) => (
+            <SwiperSlide key={slide.id}>
+              <div
+                className={`mx-auto flex h-[440px] max-w-7xl items-center px-5 sm:px-8 lg:px-10 ${slide.classes}`}
+              >
+                <div className="max-w-xl space-y-5">
+                  <p className="hero-content text-xs uppercase tracking-[0.35em] text-stone-500">
+                    K Shop
+                  </p>
+                  <h1 className="hero-content text-4xl font-semibold leading-tight text-stone-900 sm:text-5xl">
+                    {slide.title}
+                  </h1>
+                  <p className="hero-content text-base text-stone-600 sm:text-lg">
+                    {slide.subtitle}
+                  </p>
+                  <Link
+                    to={slide.to}
+                    className="hero-content inline-flex items-center gap-2 rounded-full bg-stone-900 px-6 py-3 text-sm font-medium uppercase tracking-wider text-white transition hover:bg-stone-700"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {slide.cta}
+                  </Link>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
       </section>
 
-      {/* Product */}
-      <section className="container mx-auto py-12 px-4">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">Products</h2>
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <Button variant="outlined" onClick={handleClick}>
-              Filter & Sort
-            </Button>
-            <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-              <div className="px-4 py-2 w-64">
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Category</InputLabel>
-                  <Select
-                    value={categoryFilter}
-                    label="Category"
-                    onChange={handleCategoryChange}
-                  >
-                    <MenuItem value="all">All</MenuItem>
-                    <MenuItem value="computer">Computer</MenuItem>
-                    <MenuItem value="laptop">Laptop</MenuItem>
-                    <MenuItem value="accessories">Accessories</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Sort by</InputLabel>
-                  <Select
-                    value={sortOption}
-                    label="Sort"
-                    onChange={handleSortChange}
-                  >
-                    <MenuItem value="">None</MenuItem>
-                    <MenuItem value="priceLowHigh">Price: Low to High</MenuItem>
-                    <MenuItem value="priceHighLow">Price: High to Low</MenuItem>
-                    <MenuItem value="category">Category A-Z</MenuItem>
-                  </Select>
-                </FormControl>
-              </div>
-            </Menu>
+            <p className="text-xs uppercase tracking-[0.3em] text-stone-500">
+              Curated Drop
+            </p>
+            <h2 className="mt-2 text-3xl font-semibold text-stone-900">Fashion Collection</h2>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm text-stone-600">
+              <Filter className="h-4 w-4" />
+              <span className="uppercase tracking-wider">Category</span>
+              <select
+                value={categoryFilter}
+                onChange={(event) => setCategoryFilter(event.target.value)}
+                className="bg-transparent text-sm text-stone-900 outline-none"
+              >
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="inline-flex items-center gap-2 rounded-full border border-stone-300 bg-white px-4 py-2 text-sm text-stone-600">
+              <Search className="h-4 w-4" />
+              <span className="uppercase tracking-wider">Sort</span>
+              <select
+                value={sortOption}
+                onChange={(event) => setSortOption(event.target.value as SortValue)}
+                className="bg-transparent text-sm text-stone-900 outline-none"
+              >
+                <option value="">none</option>
+                <option value="priceLowHigh">price low-high</option>
+                <option value="priceHighLow">price high-low</option>
+                <option value="category">category a-z</option>
+              </select>
+            </label>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div ref={listRef} className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.length > 0 ? (
-            filteredProducts.map((item, i) => (
-              <Link
-                to={`/product/${item.id}`}
-                key={i}
-                className="border-2 p-2 sm:p-4 rounded-xl hover:shadow-lg transition block group"
+            filteredProducts.map((item) => (
+              <article
+                key={item.id}
+                className="product-card group rounded-2xl border border-stone-200 bg-white p-3 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
-                <div className="bg-white h-24 md:h-36 xl:h-48 rounded-xl mb-4 overflow-hidden flex justify-center items-center">
-                  <img
-                    className="w-fit max-h-24 md:max-h-36 xl:max-h-48 object-contain group-hover:scale-110 transition-all duration-500"
-                    src={`/images/products/${item.imageOne}`}
-                    alt={`${item?.category}-${item.imageOne}`}
-                  />
-                </div>
-                <h3 className="text-sm sm:text-md lg:text-lg font-medium mb-1 leading-1 truncate">
-                  {item?.name}
-                </h3>
-                <p className="text-sm text-gray-500 mb-2">{item?.category}</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm sm:text-md lg:text-lg font-semibold">
-                    {formatTHB(item?.price)}
-                  </span>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{ fontSize: { xs: "0.7rem", md: "0.7rem" } }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      addToCart({
-                        id: item.id,
-                        name: `${item?.name}`,
-                        quantity: 1,
-                        price: item?.price || 0,
-                        image: `${item?.imageOne}`,
-                        stock: item.quantity,
-                      });
-                    }}
-                  >
-                    ADD TO CART
-                  </Button>
-                </div>
-              </Link>
+                <Link to={`/product/${item.id}`}>
+                  <div className="overflow-hidden rounded-xl bg-white">
+                    <img
+                      src={resolveImageSrc(item.imageOne)}
+                      alt={item.name}
+                      onError={applyImageFallback}
+                      className="h-44 w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="mt-3 space-y-1">
+                    <h3 className="truncate text-sm font-semibold text-stone-900 sm:text-base">
+                      {item.name}
+                    </h3>
+                    <p className="text-xs uppercase tracking-[0.2em] text-stone-500">
+                      {item.category}
+                    </p>
+                    <p className="text-sm font-semibold text-stone-900 sm:text-base">
+                      {formatTHB(item.price)}
+                    </p>
+                  </div>
+                </Link>
+
+                <button
+                  onClick={() =>
+                    addToCart({
+                      id: item.id,
+                      name: item.name,
+                      quantity: 1,
+                      price: item.price,
+                      image: item.imageOne,
+                      stock: item.quantity,
+                    })
+                  }
+                  className="mt-3 w-full rounded-xl border border-stone-900 px-3 py-2 text-xs font-medium uppercase tracking-[0.2em] text-stone-900 transition hover:bg-stone-900 hover:text-white"
+                >
+                  Add to Cart
+                </button>
+              </article>
             ))
           ) : (
-            <div className="col-span-full text-center text-gray-400 text-lg py-10 flex flex-col items-center justify-center gap-3">
-              <SentimentDissatisfiedIcon className="!text-5xl" />
-              <p>No products available.</p>
+            <div className="col-span-full rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-12 text-center text-stone-500">
+              No products available.
             </div>
           )}
         </div>
       </section>
 
-      {/* Promotion Section */}
-      <section className="bg-blue-100 text-center py-16 px-4">
-        <h2 className="text-3xl font-bold mb-4">Summer Sale Up to 70% Off</h2>
-        <p className="text-lg mb-6">Limited time only. Hurry up!</p>
-        <Link to="/">
-          <Button variant="contained" size="large">
-            Shop Deals
-          </Button>
-        </Link>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-4">
-        <div className="container mx-auto grid md:grid-cols-4 gap-8">
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Beta Shop</h3>
-            <p>Online shoping store.</p>
-          </div>
-          <div>
-            <h4 className="text-md font-semibold mb-2">Quick Links</h4>
-            <ul className="space-y-1 text-sm">
-              <li>
-                <Link to="/" className="hover:underline">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="hover:underline">
-                  Shop
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="hover:underline">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="hover:underline">
-                  Contact
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-md font-semibold mb-2">Help</h4>
-            <ul className="space-y-1 text-sm">
-              <li>
-                <Link to="/" className="hover:underline">
-                  Shipping
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="hover:underline">
-                  Returns
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="hover:underline">
-                  FAQs
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-md font-semibold mb-2">Newsletter</h4>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              className="w-full p-2 rounded mb-2 text-gray-900 bg-white"
-            />
-            <Button variant="contained" fullWidth>
-              Subscribe
-            </Button>
-          </div>
-        </div>
-        <div className="text-center text-sm mt-8">
-          © 2025 Beta Shop. All rights reserved.
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

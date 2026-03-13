@@ -5,11 +5,11 @@ import { useEffect } from "react";
 
 export default function App() {
   useEffect(() => {
-    document.title = "Beta shop";
+    document.title = "K Shop";
   }, []);
   return (
     <AppProviders>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-white">
         <Navbar />
         <AppRouter />
       </div>

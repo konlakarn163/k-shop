@@ -1,49 +1,38 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Button, Typography } from "@mui/material";
-import { formatTHB } from "../utils/formatCurrency";
-import { useCart } from "../hooks/useCart";
 import products from "../utils/mockProducts";
+import { useCart } from "../hooks/useCart";
+import { formatTHB } from "../utils/formatCurrency";
+import { applyImageFallback, resolveImageSrc } from "../utils/resolveImage";
 
 export default function RecommendedProducts() {
   const { addToCart } = useCart();
 
   const recommended = useMemo(() => {
     const shuffled = [...products].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, 5);
-  }, [products]);
+    return shuffled.slice(0, 4);
+  }, []);
 
   return (
-    <section className="mt-12">
-      <Typography variant="h6" className="mb-4 font-bold text-black !my-2">
-        Recommended Products
-      </Typography>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <section className="mt-14">
+      <p className="text-xs uppercase tracking-[0.3em] text-stone-500">You may also like</p>
+      <h3 className="mt-2 text-2xl font-semibold text-stone-900">Recommended</h3>
+
+      <div className="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4">
         {recommended.map((item) => (
-          <div
-            key={item.id}
-            className="border rounded-xl p-3 hover:shadow transition group space-y-2"
-          >
-            <Link to={`/product/${item.id}`} className="space-y-1">
+          <article key={item.id} className="rounded-2xl border border-stone-200 bg-white p-3 shadow-sm">
+            <Link to={`/product/${item.id}`}>
               <img
-                src={`/images/products/${item.imageOne}`}
+                src={resolveImageSrc(item.imageOne)}
+                onError={applyImageFallback}
                 alt={item.name}
-                className="h-32 object-contain mx-auto mb-2 group-hover:scale-105 transition-transform"
+                className="h-40 w-full rounded-xl object-cover"
               />
-              <Typography variant="body1" className="text-sm sm:text-md lg:text-lg font-medium mb-1 leading-1 truncate">
-                {item.name}
-              </Typography>
-              <Typography variant="body2" className="text-gray-500">
-                {item.category}
-              </Typography>
-              <Typography
-                variant="subtitle2"
-                className="text-sm sm:text-md lg:text-l"
-              >
-                {formatTHB(item.price)}
-              </Typography>
+              <h4 className="mt-3 truncate text-sm font-semibold text-stone-900">{item.name}</h4>
+              <p className="text-xs uppercase tracking-[0.2em] text-stone-500">{item.category}</p>
+              <p className="mt-1 text-sm font-medium text-stone-900">{formatTHB(item.price)}</p>
             </Link>
-            <Button
+            <button
               onClick={() =>
                 addToCart({
                   id: item.id,
@@ -51,17 +40,14 @@ export default function RecommendedProducts() {
                   quantity: 1,
                   price: item.price,
                   image: item.imageOne,
-                  stock: item.quantity
+                  stock: item.quantity,
                 })
               }
-              variant="contained"
-              size="small"
-              fullWidth
-              className="mt-2"
+              className="mt-3 w-full rounded-xl border border-stone-900 px-3 py-2 text-xs uppercase tracking-[0.15em] text-stone-900 transition hover:bg-stone-900 hover:text-white"
             >
               Add to Cart
-            </Button>
-          </div>
+            </button>
+          </article>
         ))}
       </div>
     </section>

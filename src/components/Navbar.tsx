@@ -1,150 +1,117 @@
-import React from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import Badge from "@mui/material/Badge";
-import TextField from "@mui/material/TextField";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Slide from "@mui/material/Slide";
-import useScrollTrigger from "@mui/material/useScrollTrigger";
-import Popover from "@mui/material/Popover";
-import Button from "@mui/material/Button";
+import { Search, ShoppingBag } from "lucide-react";
 import { useCart } from "../hooks/useCart";
+import { resolveImageSrc, applyImageFallback } from "../utils/resolveImage";
 
-interface Props {
-  window?: () => Window;
-}
-
-function HideOnScroll(props: Props & { children: React.ReactElement }) {
-  const { children, window } = props;
-  const trigger = useScrollTrigger({
-    target: window ? window() : undefined,
-  });
-
-  return (
-    <Slide appear={false} direction="down" in={!trigger}>
-      {children}
-    </Slide>
-  );
-}
-
-export default function Navbar(props: Props) {
-  const { cartItems } = useCart();
-  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+export default function Navbar() {
   const navigate = useNavigate();
-  const [searchInput, setSearchInput] = React.useState("");
+  const { cartItems } = useCart();
+  const [searchInput, setSearchInput] = useState("");
+  const [openMiniCart, setOpenMiniCart] = useState(false);
 
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handlePopoverClose = () => {
-    setAnchorEl(null);
-  };
-  const open = Boolean(anchorEl);
+  const cartCount = useMemo(
+    () => cartItems.reduce((total, item) => total + item.quantity, 0),
+    [cartItems]
+  );
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
     const query = searchInput.trim();
     if (query) {
       navigate(`/?search=${encodeURIComponent(query)}`);
-    } else {
-      navigate(`/`);
+      return;
     }
+    navigate("/");
   };
 
   return (
-    <React.Fragment>
-      <HideOnScroll {...props}>
-        <AppBar color="inherit" elevation={0}>
-          <Toolbar className="flex justify-center items-center shadow">
-            <div className="container flex justify-between items-center px-2">
-              <Link
-                to="/"
-                className="text-md sm:text-lg md:text-2xl font-bold text-blue-600"
-              >
-                Beta Shop
-              </Link>
-              <form onSubmit={handleSearch} className="flex gap-4 items-center">
-                <TextField
-                  placeholder="ค้นหาสินค้า..."
-                  size="small"
-                  variant="outlined"
-                  className="w-48 sm:w-64"
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                />
-                <div
-                  onMouseEnter={handlePopoverOpen}
-                  onMouseLeave={handlePopoverClose}
-                >
-                  <Badge badgeContent={cartCount} color="error">
-                    <ShoppingCartIcon />
-                  </Badge>
-                  <Popover
-                    open={open}
-                    anchorEl={anchorEl}
-                    onClose={handlePopoverClose}
-                    anchorOrigin={{
-                      vertical: "bottom",
-                      horizontal: "right",
-                    }}
-                    transformOrigin={{
-                      vertical: "top",
-                      horizontal: "right",
-                    }}
-                    disableRestoreFocus
-                    PaperProps={{ className: "p-4 w-64" }}
-                  >
-                    <div className="text-sm font-medium mb-4 ">CART</div>
-                    {cartItems.length === 0 ? (
-                      <div className="text-gray-500 text-sm">
-                        No products in the cart.
+    <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <Link
+          to="/"
+          className="text-base font-semibold uppercase tracking-[0.25em] text-stone-900 sm:text-lg"
+        >
+          K Shop
+        </Link>
+
+        <form
+          onSubmit={handleSearch}
+          className="hidden w-full max-w-lg items-center rounded-full border border-stone-300 bg-white px-4 py-2 sm:flex"
+        >
+          <Search className="h-4 w-4 text-stone-500" />
+          <input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search fashion pieces..."
+            className="ml-2 w-full bg-transparent text-sm text-stone-800 outline-none"
+          />
+        </form>
+
+        <div
+          className="relative"
+          onMouseEnter={() => setOpenMiniCart(true)}
+          onMouseLeave={() => setOpenMiniCart(false)}
+        >
+          <button
+            onClick={() => navigate("/cart")}
+            className="relative rounded-full border border-stone-300 p-2 text-stone-900 transition hover:bg-stone-900 hover:text-white"
+            aria-label="cart"
+          >
+            <ShoppingBag className="h-5 w-5" />
+            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-stone-900 px-1 text-[10px] text-white">
+              {cartCount}
+            </span>
+          </button>
+
+          {openMiniCart && (
+            <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-stone-200 bg-white p-4 shadow-xl">
+              <p className="mb-3 text-xs uppercase tracking-[0.2em] text-stone-500">Cart</p>
+              {cartItems.length === 0 ? (
+                <p className="text-sm text-stone-500">No products in the cart.</p>
+              ) : (
+                <div className="space-y-2">
+                  {cartItems.slice(0, 3).map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 rounded-xl bg-white p-2">
+                      <img
+                        src={resolveImageSrc(item.image)}
+                        onError={applyImageFallback}
+                        alt={item.name}
+                        className="h-12 w-12 rounded-lg object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-stone-800">{item.name}</p>
+                        <p className="text-xs text-stone-500">x{item.quantity}</p>
                       </div>
-                    ) : (
-                      <div className="space-y-1 max-h-48 overflow-auto flex flex-col gap-y-2 ">
-                        {cartItems.slice(0, 3).map((item, index) => (
-                          <div
-                            key={index}
-                            className="text-sm flex justify-between gap-1"
-                          >
-                            <div className="min-w-10 min-h-10   bg-white rounded-xl overflow-hidden">
-                              <img
-                                src={`/images/products/${item.image}`}
-                                className="w-fit h-10 object-contain rounded mx-auto"
-                              />
-                            </div>
-                            <span>
-                              {item.name}
-                              {item.name}
-                            </span>
-                            <span className="text-blue-500">
-                              x{item.quantity}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="mt-3 text-right">
-                      <Button
-                        size="small"
-                        onClick={() => {
-                          setAnchorEl(null);
-                          navigate("/cart");
-                        }}
-                        variant="contained"
-                      >
-                        VIEW MORE
-                      </Button>
                     </div>
-                  </Popover>
+                  ))}
+                  <button
+                    className="mt-2 w-full rounded-xl bg-stone-900 py-2 text-xs uppercase tracking-[0.2em] text-white transition hover:bg-stone-700"
+                    onClick={() => navigate("/cart")}
+                  >
+                    View More
+                  </button>
                 </div>
-              </form>
+              )}
             </div>
-          </Toolbar>
-        </AppBar>
-      </HideOnScroll>
-      <Toolbar />
-    </React.Fragment>
+          )}
+        </div>
+      </div>
+
+      <div className="border-t border-stone-200 px-4 py-2 sm:hidden">
+        <form
+          onSubmit={handleSearch}
+          className="flex items-center rounded-full border border-stone-300 bg-white px-4 py-2"
+        >
+          <Search className="h-4 w-4 text-stone-500" />
+          <input
+            value={searchInput}
+            onChange={(event) => setSearchInput(event.target.value)}
+            placeholder="Search fashion pieces..."
+            className="ml-2 w-full bg-transparent text-sm text-stone-800 outline-none"
+          />
+        </form>
+      </div>
+    </header>
   );
 }

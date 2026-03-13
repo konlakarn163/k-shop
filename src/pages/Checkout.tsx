@@ -1,65 +1,56 @@
-import { useCart } from "../hooks/useCart";
-import { useState, useEffect } from "react";
-import {
-  TextField,
-  Button,
-  Typography,
-  Radio,
-  RadioGroup,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
-} from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
-export default function Checkout() {
-  useEffect(() => {
-    document.title = "Beta shop | Checkout";
-  }, []);
+import { useCart } from "../hooks/useCart";
+import { formatTHB } from "../utils/formatCurrency";
+import { applyImageFallback, resolveImageSrc } from "../utils/resolveImage";
 
-  const { cartItems, clearCart } = useCart();
-  const navigate = useNavigate();
+type ErrorState = {
+  name?: string;
+  phone?: string;
+  address?: string;
+  cardName?: string;
+  creditCard?: string;
+  expiryDate?: string;
+  cvv?: string;
+};
+
+export default function Checkout() {
   const { enqueueSnackbar } = useSnackbar();
-  // ข้อมูล Address
+  const navigate = useNavigate();
+  const { cartItems, clearCart } = useCart();
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("cod");
-
-  // ข้อมูลบัตรเครดิต
   const [cardName, setCardName] = useState("");
   const [creditCard, setCreditCard] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
+  const [errors, setErrors] = useState<ErrorState>({});
 
-  // ERROR STATE
-  const [errors, setErrors] = useState<{
-    name?: string;
-    phone?: string;
-    address?: string;
-    cardName?: string;
-    creditCard?: string;
-    expiryDate?: string;
-    cvv?: string;
-  }>({});
+  useEffect(() => {
+    document.title = "K Shop | Checkout";
+  }, []);
 
-  const total = cartItems.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
+  const total = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cartItems]
   );
 
-  const isValidPhone = (phone: string) =>
-    /^\d{9,15}$/.test(phone.replace(/\D/g, ""));
+  const isValidPhone = (phoneNumber: string) =>
+    /^\d{9,15}$/.test(phoneNumber.replace(/\D/g, ""));
   const isValidCardNumber = (number: string) =>
     /^\d{13,19}$/.test(number.replace(/\s+/g, ""));
-  const isValidExpiry = (expiry: string) =>
-    /^(0[1-9]|1[0-2])\/?([0-9]{2})$/.test(expiry);
-  const isValidCVV = (cvv: string) => /^\d{3,4}$/.test(cvv);
+  const isValidExpiry = (expiry: string) => /^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(expiry);
+  const isValidCVV = (value: string) => /^\d{3,4}$/.test(value);
 
   const handleSubmit = () => {
-    const newErrors: typeof errors = {};
+    const newErrors: ErrorState = {};
 
     if (!name) newErrors.name = "Please enter your name";
+
     if (!phone) newErrors.phone = "Please enter your phone number";
     else if (!isValidPhone(phone)) newErrors.phone = "Invalid phone number";
 
@@ -67,6 +58,7 @@ export default function Checkout() {
 
     if (paymentMethod === "credit") {
       if (!cardName) newErrors.cardName = "Please enter cardholder name";
+
       if (!creditCard) newErrors.creditCard = "Please enter card number";
       else if (!isValidCardNumber(creditCard))
         newErrors.creditCard = "Invalid card number";
@@ -85,202 +77,191 @@ export default function Checkout() {
       return;
     }
 
-    enqueueSnackbar(
-      `Success: ${paymentMethod.toUpperCase()} \nTotal: ฿${total}`,
-      {
-        variant: "success",
-      }
-    );
+    enqueueSnackbar(`Success: ${paymentMethod.toUpperCase()} | Total: ${formatTHB(total)}`, {
+      variant: "success",
+    });
+
     setTimeout(() => {
-      clearCart()
+      clearCart();
       navigate("/payment-complete");
-    }, 500);
+    }, 450);
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-3xl">
-      <Typography variant="h5" className="font-bold">
-        Checkout
-      </Typography>
-      <div className="bg-gray-100 rounded-xl p-4 my-4 shadow">
-        <p className="mb-2">Delivery address</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <TextField
-            label="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            fullWidth
-            error={!!errors.name}
-            helperText={errors.name}
-            required
-            InputProps={{
-              style: { backgroundColor: "white" },
-            }}
-          />
-          <TextField
-            label="Phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            fullWidth
-            error={!!errors.phone}
-            helperText={errors.phone}
-            placeholder="Numbers only"
-            required
-            InputProps={{
-              style: { backgroundColor: "white" },
-            }}
-          />
-          <TextField
-            label="Address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            multiline
-            rows={3}
-            fullWidth
-            className="md:col-span-2"
-            error={!!errors.address}
-            helperText={errors.address}
-            required
-            InputProps={{
-              style: { backgroundColor: "white" },
-            }}
-          />
-        </div>
-      </div>
+    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+      <h1 className="text-3xl font-semibold text-stone-900">Checkout</h1>
 
-      <FormControl component="fieldset" className="mb-4">
-        <FormLabel>Payment Method</FormLabel>
-        <RadioGroup
-          value={paymentMethod}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-        >
-          <FormControlLabel
-            value="cod"
-            control={<Radio />}
-            label="Cash on Delivery"
-          />
-          <FormControlLabel
-            value="bank"
-            control={<Radio />}
-            label="Bank Transfer"
-          />
-          <FormControlLabel
-            value="promptpay"
-            control={<Radio />}
-            label="PromptPay (QR Code)"
-          />
-          <FormControlLabel
-            value="credit"
-            control={<Radio />}
-            label="Credit / Debit Card"
-          />
-        </RadioGroup>
-      </FormControl>
-      <div className="my-4">
-        {paymentMethod === "bank" && (
-          <div className="mb-4 p-4 bg-gray-50 rounded border flex items-center">
-            <p>Bank Transfer:</p>
-            <img src="/images/payment/kbank.png" alt="kbank" className="w-16" />
-            <p>KBank 123-4-56789-0</p>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr,1fr]">
+        <div className="space-y-5 rounded-3xl border border-stone-200 bg-white p-5">
+          <div>
+            <p className="text-xs uppercase tracking-[0.25em] text-stone-500">Delivery Address</p>
           </div>
-        )}
 
-        {paymentMethod === "promptpay" && (
-          <div className="mb-4 p-4 bg-gray-50 rounded border text-center">
-            <Typography>PromptPay: 0987654321</Typography>
-            <img
-              src="/images/payment/qr-payment.png"
-              alt="PromptPay QR"
-              className="w-40 mx-auto my-4"
-            />
-            <Typography>Mr.QR Prompay</Typography>
-          </div>
-        )}
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Name"
+                className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
+              />
+              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+            </div>
 
-        {paymentMethod === "credit" && (
-          <div className="mb-4 p-4 bg-gray-50 rounded border space-y-4 shadow">
-            <TextField
-              label="Cardholder Name"
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value)}
-              fullWidth
-              placeholder="John Doe"
-              error={!!errors.cardName}
-              helperText={errors.cardName}
-              required
-            />
-            <TextField
-              label="Card Number"
-              value={creditCard}
-              onChange={(e) => setCreditCard(e.target.value)}
-              fullWidth
-              placeholder="1234 5678 9012 3456"
-              error={!!errors.creditCard}
-              helperText={errors.creditCard}
-              required
-              inputProps={{ maxLength: 19 }}
-            />
-            <div className="flex gap-4">
-              <TextField
-                label="Expiry Date (MM/YY)"
-                value={expiryDate}
-                onChange={(e) => setExpiryDate(e.target.value)}
-                placeholder="MM/YY"
-                fullWidth
-                error={!!errors.expiryDate}
-                helperText={errors.expiryDate}
-                required
-                inputProps={{ maxLength: 4 }}
+            <div>
+              <input
+                value={phone}
+                onChange={(event) => setPhone(event.target.value)}
+                placeholder="Phone"
+                className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
               />
-              <TextField
-                label="CVV"
-                value={cvv}
-                onChange={(e) => setCvv(e.target.value)}
-                placeholder="123"
-                fullWidth
-                error={!!errors.cvv}
-                helperText={errors.cvv}
-                required
-                type="password"
-                inputProps={{ maxLength: 3 }}
+              {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+            </div>
+
+            <div className="md:col-span-2">
+              <textarea
+                value={address}
+                onChange={(event) => setAddress(event.target.value)}
+                placeholder="Address"
+                rows={3}
+                className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
               />
+              {errors.address && <p className="mt-1 text-xs text-red-500">{errors.address}</p>}
             </div>
           </div>
-        )}
-      </div>
-      <ul className="space-y-2 my-6 ">
-        {cartItems.map((item) => (
-          <li key={item.id} className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="min-w-14 min-h-14 bg-white rounded-xl overflow-hidden">
-                <img
-                  src={`/images/products/${item.image}`}
-                  className="w-14 h-14 object-contain rounded"
+
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-[0.25em] text-stone-500">Payment Method</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {["cod", "bank", "promptpay", "credit"].map((method) => (
+                <label
+                  key={method}
+                  className={`cursor-pointer rounded-xl border px-4 py-3 text-sm capitalize transition ${
+                    paymentMethod === method
+                      ? "border-stone-900 bg-stone-900 text-white"
+                      : "border-stone-300 bg-white text-stone-700"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value={method}
+                    checked={paymentMethod === method}
+                    onChange={(event) => setPaymentMethod(event.target.value)}
+                    className="hidden"
+                  />
+                  {method === "cod"
+                    ? "Cash on Delivery"
+                    : method === "bank"
+                    ? "Bank Transfer"
+                    : method === "promptpay"
+                    ? "PromptPay"
+                    : "Credit / Debit Card"}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {paymentMethod === "bank" && (
+            <div className="rounded-xl border border-stone-200 bg-white p-4 text-sm text-stone-700">
+              Bank Transfer: KBank 123-4-56789-0
+            </div>
+          )}
+
+          {paymentMethod === "promptpay" && (
+            <div className="rounded-xl border border-stone-200 bg-white p-4 text-sm text-stone-700">
+              PromptPay: 0987654321
+            </div>
+          )}
+
+          {paymentMethod === "credit" && (
+            <div className="space-y-3 rounded-xl border border-stone-200 bg-white p-4">
+              <div>
+                <input
+                  value={cardName}
+                  onChange={(event) => setCardName(event.target.value)}
+                  placeholder="Cardholder Name"
+                  className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
                 />
+                {errors.cardName && <p className="mt-1 text-xs text-red-500">{errors.cardName}</p>}
               </div>
-              <p>
-                <span>{item.name}</span>
-                <span className="text-blue-500 ml-2">x {item.quantity}</span>
-              </p>
+
+              <div>
+                <input
+                  value={creditCard}
+                  onChange={(event) => setCreditCard(event.target.value)}
+                  placeholder="Card Number"
+                  className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
+                />
+                {errors.creditCard && (
+                  <p className="mt-1 text-xs text-red-500">{errors.creditCard}</p>
+                )}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <input
+                    value={expiryDate}
+                    onChange={(event) => setExpiryDate(event.target.value)}
+                    placeholder="MM/YY"
+                    className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
+                  />
+                  {errors.expiryDate && (
+                    <p className="mt-1 text-xs text-red-500">{errors.expiryDate}</p>
+                  )}
+                </div>
+
+                <div>
+                  <input
+                    value={cvv}
+                    onChange={(event) => setCvv(event.target.value)}
+                    placeholder="CVV"
+                    type="password"
+                    className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
+                  />
+                  {errors.cvv && <p className="mt-1 text-xs text-red-500">{errors.cvv}</p>}
+                </div>
+              </div>
             </div>
-            <span>฿{item.price * item.quantity}</span>
-          </li>
-        ))}
-      </ul>
+          )}
+        </div>
 
-      <div className="flex justify-between font-bold text-lg mb-4">
-        <span>Total</span>
-        <span>฿{total}</span>
+        <aside className="rounded-3xl border border-stone-200 bg-white p-5">
+          <p className="text-xs uppercase tracking-[0.25em] text-stone-500">Order Summary</p>
+          <ul className="mt-4 space-y-3">
+            {cartItems.map((item) => (
+              <li key={item.id} className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <img
+                    src={resolveImageSrc(item.image)}
+                    onError={applyImageFallback}
+                    alt={item.name}
+                    className="h-12 w-12 rounded-lg object-cover"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-stone-900">{item.name}</p>
+                    <p className="text-xs text-stone-500">x{item.quantity}</p>
+                  </div>
+                </div>
+                <p className="text-sm text-stone-700">{formatTHB(item.price * item.quantity)}</p>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-5 border-t border-stone-200 pt-4">
+            <div className="flex items-center justify-between text-lg font-semibold text-stone-900">
+              <span>Total</span>
+              <span>{formatTHB(total)}</span>
+            </div>
+            <button
+              onClick={handleSubmit}
+              className="mt-4 w-full rounded-full bg-stone-900 px-5 py-3 text-xs uppercase tracking-[0.2em] text-white transition hover:bg-stone-700"
+            >
+              Confirm Order
+            </button>
+          </div>
+        </aside>
       </div>
-
-      <Button
-        variant="contained"
-        color="primary"
-        fullWidth
-        onClick={handleSubmit}
-      >
-        Confirm Order
-      </Button>
     </div>
   );
 }
