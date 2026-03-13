@@ -58,17 +58,14 @@ export default function SiteFooter() {
             Visit
           </p>
           <div className="space-y-2 text-sm leading-7 text-stone-600">
-            <p>28 Bartholomeo Street, Bangkok Atelier</p>
-            <p>Mon — Sat / 10:00 — 20:00</p>
-            <p>hello@kshop.com</p>
-            <p>+66 98 765 4321</p>
+            <p>Address</p>
           </div>
         </div>
       </div>
 
       <div className="border-t border-stone-200">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-5 text-xs uppercase tracking-[0.25em] text-stone-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>© 2026 K Shop</p>
+          <p>© 2025 K Shop</p>
           <p>Crafted with fashion-forward motion & shopping flow</p>
         </div>
       </div>

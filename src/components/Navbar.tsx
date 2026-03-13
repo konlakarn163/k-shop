@@ -3,6 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { Search, ShoppingBag } from "lucide-react";
 import { useCart } from "../hooks/useCart";
 import { resolveImageSrc, applyImageFallback } from "../utils/resolveImage";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -37,14 +40,14 @@ export default function Navbar() {
 
         <form
           onSubmit={handleSearch}
-          className="hidden w-full max-w-lg items-center rounded-full border border-stone-300 bg-white px-4 py-2 sm:flex"
+          className="hidden w-full max-w-lg items-center rounded-full border border-stone-300 bg-white px-3 py-1.5 sm:flex"
         >
-          <Search className="h-4 w-4 text-stone-500" />
-          <input
+          <Search className="h-4 w-4 shrink-0 text-stone-400" />
+          <Input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search fashion pieces..."
-            className="ml-2 w-full bg-transparent text-sm text-stone-800 outline-none"
+            className="h-auto border-0 bg-transparent px-2 py-0 text-sm shadow-none outline-none ring-0 focus-visible:ring-0"
           />
         </form>
 
@@ -53,16 +56,20 @@ export default function Navbar() {
           onMouseEnter={() => setOpenMiniCart(true)}
           onMouseLeave={() => setOpenMiniCart(false)}
         >
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => navigate("/cart")}
-            className="relative rounded-full border border-stone-300 p-2 text-stone-900 transition hover:bg-stone-900 hover:text-white"
+            className="relative rounded-full border border-stone-300"
             aria-label="cart"
           >
             <ShoppingBag className="h-5 w-5" />
-            <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-stone-900 px-1 text-[10px] text-white">
-              {cartCount}
-            </span>
-          </button>
+            {cartCount > 0 && (
+              <Badge className="absolute -right-1.5 -top-1.5 min-w-5 px-1 text-[10px]">
+                {cartCount}
+              </Badge>
+            )}
+          </Button>
 
           {openMiniCart && (
             <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-stone-200 bg-white p-4 shadow-xl">
@@ -85,12 +92,13 @@ export default function Navbar() {
                       </div>
                     </div>
                   ))}
-                  <button
-                    className="mt-2 w-full rounded-xl bg-stone-900 py-2 text-xs uppercase tracking-[0.2em] text-white transition hover:bg-stone-700"
+                  <Button
+                    size="sm"
+                    className="mt-2 w-full rounded-xl text-xs uppercase tracking-[0.2em]"
                     onClick={() => navigate("/cart")}
                   >
                     View More
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -101,14 +109,14 @@ export default function Navbar() {
       <div className="border-t border-stone-200 px-4 py-2 sm:hidden">
         <form
           onSubmit={handleSearch}
-          className="flex items-center rounded-full border border-stone-300 bg-white px-4 py-2"
+          className="flex items-center rounded-full border border-stone-300 bg-white px-3 py-1.5"
         >
-          <Search className="h-4 w-4 text-stone-500" />
-          <input
+          <Search className="h-4 w-4 shrink-0 text-stone-400" />
+          <Input
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Search fashion pieces..."
-            className="ml-2 w-full bg-transparent text-sm text-stone-800 outline-none"
+            className="h-auto border-0 bg-transparent px-2 py-0 text-sm shadow-none ring-0 focus-visible:ring-0"
           />
         </form>
       </div>

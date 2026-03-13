@@ -6,6 +6,8 @@ import { useCart } from "../hooks/useCart";
 import { formatTHB } from "../utils/formatCurrency";
 import RecommendedProducts from "../components/RecommentProduct";
 import { applyImageFallback, resolveImageSrc } from "../utils/resolveImage";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -94,30 +96,34 @@ export default function ProductDetail() {
           <p className="leading-7 text-stone-600">{product.description}</p>
 
           <div className="inline-flex items-center rounded-full border border-stone-300 bg-white">
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full"
               onClick={decrease}
-              className="rounded-l-full p-3 text-stone-700 transition hover:bg-stone-200"
               disabled={count <= 1}
             >
               <Minus className="h-4 w-4" />
-            </button>
-            <input
+            </Button>
+            <Input
               value={count}
               onChange={(event) => handleInput(event.target.value)}
-              className="w-14 bg-transparent text-center text-sm font-medium text-stone-900 outline-none"
+              className="h-auto w-14 border-0 bg-transparent text-center text-sm font-medium shadow-none ring-0 focus-visible:ring-0"
             />
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="rounded-full"
               onClick={increase}
-              className="rounded-r-full p-3 text-stone-700 transition hover:bg-stone-200"
               disabled={count >= product.quantity}
             >
               <Plus className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
 
           <p className="text-sm text-stone-500">In stock: {product.quantity}</p>
 
-          <button
+          <Button
             onClick={() =>
               addToCart({
                 id: product.id,
@@ -128,10 +134,10 @@ export default function ProductDetail() {
                 stock: product.quantity,
               })
             }
-            className="rounded-full bg-stone-900 px-8 py-3 text-sm uppercase tracking-[0.2em] text-white transition hover:bg-stone-700"
+            className="rounded-full px-8 text-xs uppercase tracking-[0.2em]"
           >
             Add to Cart
-          </button>
+          </Button>
         </div>
       </div>
 
