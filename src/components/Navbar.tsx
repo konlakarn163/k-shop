@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, ShoppingBag } from "lucide-react";
 import { useCart } from "../hooks/useCart";
@@ -12,6 +12,7 @@ export default function Navbar() {
   const { cartItems } = useCart();
   const [searchInput, setSearchInput] = useState("");
   const [openMiniCart, setOpenMiniCart] = useState(false);
+  const miniCartRef = useRef<HTMLDivElement>(null);
 
   const cartCount = useMemo(
     () => cartItems.reduce((total, item) => total + item.quantity, 0),
@@ -27,6 +28,20 @@ export default function Navbar() {
     }
     navigate("/");
   };
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!miniCartRef.current?.contains(event.target as Node)) {
+        setOpenMiniCart(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-stone-200 bg-white/90 backdrop-blur">
@@ -51,16 +66,13 @@ export default function Navbar() {
           />
         </form>
 
-        <div
-          className="relative"
-          onMouseEnter={() => setOpenMiniCart(true)}
-          onMouseLeave={() => setOpenMiniCart(false)}
-        >
+        <div className="relative" ref={miniCartRef}>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/cart")}
+            onClick={() => setOpenMiniCart((previous) => !previous)}
             className="relative rounded-full border border-stone-300"
+            aria-expanded={openMiniCart}
             aria-label="cart"
           >
             <ShoppingBag className="h-5 w-5" />
@@ -95,7 +107,10 @@ export default function Navbar() {
                   <Button
                     size="sm"
                     className="mt-2 w-full rounded-xl text-xs uppercase tracking-[0.2em]"
-                    onClick={() => navigate("/cart")}
+                    onClick={() => {
+                      setOpenMiniCart(false);
+                      navigate("/cart");
+                    }}
                   >
                     View More
                   </Button>

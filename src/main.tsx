@@ -13,7 +13,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         autoHideDuration={3000}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <div className="w-screen min-h-screen overflow-x-hidden">
+        <div className="w-screen min-h-screen [overflow-x:clip]">
           <App />
         </div>
       </SnackbarProvider>

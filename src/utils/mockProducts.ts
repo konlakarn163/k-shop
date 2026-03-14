@@ -221,4 +221,6 @@ const products = [
   },
 ];
 
+export type Product = (typeof products)[number];
+
 export default products;

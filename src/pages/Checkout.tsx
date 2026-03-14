@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
+import { z } from "zod";
 import { useCart } from "../hooks/useCart";
 import { formatTHB } from "../utils/formatCurrency";
 import { applyImageFallback, resolveImageSrc } from "../utils/resolveImage";
@@ -14,6 +15,79 @@ type ErrorState = {
   expiryDate?: string;
   cvv?: string;
 };
+
+const checkoutSchema = z
+  .object({
+    name: z.string().trim().min(1, "Please enter your name"),
+    phone: z
+      .string()
+      .trim()
+      .min(1, "Please enter your phone number")
+      .refine((value) => /^\d{9,15}$/.test(value.replace(/\D/g, "")), {
+        message: "Invalid phone number",
+      }),
+    address: z.string().trim().min(1, "Please enter your address"),
+    paymentMethod: z.enum(["cod", "bank", "promptpay", "credit"]),
+    cardName: z.string().optional(),
+    creditCard: z.string().optional(),
+    expiryDate: z.string().optional(),
+    cvv: z.string().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.paymentMethod !== "credit") {
+      return;
+    }
+
+    if (!value.cardName?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["cardName"],
+        message: "Please enter cardholder name",
+      });
+    }
+
+    if (!value.creditCard?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["creditCard"],
+        message: "Please enter card number",
+      });
+    } else if (!/^\d{13,19}$/.test(value.creditCard.replace(/\s+/g, ""))) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["creditCard"],
+        message: "Invalid card number",
+      });
+    }
+
+    if (!value.expiryDate?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["expiryDate"],
+        message: "Please enter expiry date",
+      });
+    } else if (!/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(value.expiryDate)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["expiryDate"],
+        message: "Invalid expiry date (MM/YY)",
+      });
+    }
+
+    if (!value.cvv?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["cvv"],
+        message: "Please enter CVV",
+      });
+    } else if (!/^\d{3,4}$/.test(value.cvv)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["cvv"],
+        message: "Invalid CVV",
+      });
+    }
+  });
 
 export default function Checkout() {
   const { enqueueSnackbar } = useSnackbar();
@@ -39,43 +113,32 @@ export default function Checkout() {
     [cartItems]
   );
 
-  const isValidPhone = (phoneNumber: string) =>
-    /^\d{9,15}$/.test(phoneNumber.replace(/\D/g, ""));
-  const isValidCardNumber = (number: string) =>
-    /^\d{13,19}$/.test(number.replace(/\s+/g, ""));
-  const isValidExpiry = (expiry: string) => /^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(expiry);
-  const isValidCVV = (value: string) => /^\d{3,4}$/.test(value);
-
   const handleSubmit = () => {
-    const newErrors: ErrorState = {};
+    const validationResult = checkoutSchema.safeParse({
+      name,
+      phone,
+      address,
+      paymentMethod,
+      cardName,
+      creditCard,
+      expiryDate,
+      cvv,
+    });
 
-    if (!name) newErrors.name = "Please enter your name";
+    if (!validationResult.success) {
+      const newErrors: ErrorState = {};
+      for (const issue of validationResult.error.issues) {
+        const field = issue.path[0] as keyof ErrorState;
+        if (field && !newErrors[field]) {
+          newErrors[field] = issue.message;
+        }
+      }
 
-    if (!phone) newErrors.phone = "Please enter your phone number";
-    else if (!isValidPhone(phone)) newErrors.phone = "Invalid phone number";
-
-    if (!address) newErrors.address = "Please enter your address";
-
-    if (paymentMethod === "credit") {
-      if (!cardName) newErrors.cardName = "Please enter cardholder name";
-
-      if (!creditCard) newErrors.creditCard = "Please enter card number";
-      else if (!isValidCardNumber(creditCard))
-        newErrors.creditCard = "Invalid card number";
-
-      if (!expiryDate) newErrors.expiryDate = "Please enter expiry date";
-      else if (!isValidExpiry(expiryDate))
-        newErrors.expiryDate = "Invalid expiry date (MM/YY)";
-
-      if (!cvv) newErrors.cvv = "Please enter CVV";
-      else if (!isValidCVV(cvv)) newErrors.cvv = "Invalid CVV";
-    }
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
 
     enqueueSnackbar(`Success: ${paymentMethod.toUpperCase()} | Total: ${formatTHB(total)}`, {
       variant: "success",
@@ -102,7 +165,7 @@ export default function Checkout() {
               <input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="Name"
+                placeholder="Full name"
                 className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
               />
               {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
@@ -112,7 +175,7 @@ export default function Checkout() {
               <input
                 value={phone}
                 onChange={(event) => setPhone(event.target.value)}
-                placeholder="Phone"
+                placeholder="0812345678"
                 className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
               />
               {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
@@ -180,7 +243,7 @@ export default function Checkout() {
                 <input
                   value={cardName}
                   onChange={(event) => setCardName(event.target.value)}
-                  placeholder="Cardholder Name"
+                  placeholder="Name on card"
                   className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
                 />
                 {errors.cardName && <p className="mt-1 text-xs text-red-500">{errors.cardName}</p>}
@@ -190,7 +253,7 @@ export default function Checkout() {
                 <input
                   value={creditCard}
                   onChange={(event) => setCreditCard(event.target.value)}
-                  placeholder="Card Number"
+                  placeholder="1234 5678 9012 3456"
                   className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
                 />
                 {errors.creditCard && (
@@ -202,8 +265,30 @@ export default function Checkout() {
                 <div>
                   <input
                     value={expiryDate}
-                    onChange={(event) => setExpiryDate(event.target.value)}
-                    placeholder="MM/YY"
+                    onChange={(event) => {
+                      const digits = event.target.value.replace(/\D/g, "").slice(0, 4);
+
+                      if (digits.length === 0) {
+                        setExpiryDate("");
+                        return;
+                      }
+
+                      if (digits.length === 1) {
+                        const firstDigit = Number(digits[0]);
+                        const formatted = firstDigit > 1 ? `0${digits}/` : digits;
+                        setExpiryDate(formatted);
+                        return;
+                      }
+
+                      const formatted =
+                        digits.length > 2
+                          ? `${digits.slice(0, 2)}/${digits.slice(2)}`
+                          : digits;
+                      setExpiryDate(formatted);
+                    }}
+                    placeholder="MM/YY (e.g. 08/28)"
+                    inputMode="numeric"
+                    maxLength={5}
                     className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
                   />
                   {errors.expiryDate && (
@@ -215,7 +300,7 @@ export default function Checkout() {
                   <input
                     value={cvv}
                     onChange={(event) => setCvv(event.target.value)}
-                    placeholder="CVV"
+                    placeholder="123"
                     type="password"
                     className="w-full rounded-xl border border-stone-300 px-4 py-3 text-sm outline-none focus:border-stone-800"
                   />
