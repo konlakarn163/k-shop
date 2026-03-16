@@ -55,7 +55,7 @@ export default function HomeFilters({
                     onChange={() => onToggleCategory(category)}
                     className="h-4 w-4 rounded border-stone-300 text-stone-900 focus:ring-0"
                   />
-                  <span className="capitalize">{category}</span>
+                  <span className="capitalize font-sans">{category}</span>
                 </span>
                 <span className="text-xs text-stone-400">
                   {categoryCount[category] ?? 0}
@@ -77,7 +77,7 @@ export default function HomeFilters({
               name="price-filter"
               checked={priceFilter === "all"}
               onChange={() => onPriceFilterChange("all")}
-              className="h-4 w-4 border-stone-300 text-stone-900 focus:ring-0"
+              className="h-4 w-4 border-stone-300 text-stone-900 focus:ring-0 font-sans"
             />
             All prices
           </label>
@@ -87,7 +87,7 @@ export default function HomeFilters({
               name="price-filter"
               checked={priceFilter === "under1500"}
               onChange={() => onPriceFilterChange("under1500")}
-              className="h-4 w-4 border-stone-300 text-stone-900 focus:ring-0"
+              className="h-4 w-4 border-stone-300 text-stone-900 focus:ring-0 font-sans"
             />
             Under {formatTHB(1500)}
           </label>
@@ -97,7 +97,7 @@ export default function HomeFilters({
               name="price-filter"
               checked={priceFilter === "1500to2500"}
               onChange={() => onPriceFilterChange("1500to2500")}
-              className="h-4 w-4 border-stone-300 text-stone-900 focus:ring-0"
+              className="h-4 w-4 border-stone-300 text-stone-900 focus:ring-0 font-sans"
             />
             {formatTHB(1500)} - {formatTHB(2500)}
           </label>

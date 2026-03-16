@@ -1,6 +1,7 @@
 import type { RefObject } from "react"
 import { Link } from "react-router-dom"
 
+import CircleBadge from "@/components/home/CircleBadge"
 import { applyImageFallback } from "@/utils/resolveImage"
 
 type HomeHeroProps = {
@@ -14,6 +15,10 @@ export default function HomeHero({ heroRef, heroImgRef }: HomeHeroProps) {
       ref={heroRef}
       className="sticky top-0 z-0 h-screen max-w-[1920px] overflow-hidden border-b border-stone-200 px-10"
     >
+      <CircleBadge
+        className="absolute top-20 right-6 sm:bottom-8 sm:right-2 lg:bottom-10 lg:right-[4%]"
+      />
+
       <div className="hero-img-wrap absolute top-[45%] md:top-1/2 right-8 w-[80%] md:w-[42%] md:-translate-y-1/2 px-8 sm:px-12 lg:px-16">
         <div ref={heroImgRef} className="h-[120%] lg:h-[120%] w-full">
           <img
