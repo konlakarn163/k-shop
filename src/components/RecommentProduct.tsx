@@ -23,6 +23,7 @@ export default function RecommendedProducts() {
             product={item}
             onAddToCart={() =>
               addToCart({
+                cartKey: `${item.id}--`,
                 id: item.id,
                 name: item.name,
                 quantity: 1,

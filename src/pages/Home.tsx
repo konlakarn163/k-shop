@@ -233,6 +233,7 @@ export default function HomePage() {
               onPageChange={setCurrentPage}
               onAddToCart={(item) =>
                 addToCart({
+                  cartKey: `${item.id}--`,
                   id: item.id,
                   name: item.name,
                   quantity: 1,
