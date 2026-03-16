@@ -315,17 +315,31 @@ export default function Checkout() {
           <p className="text-xs uppercase tracking-[0.25em] text-stone-500">Order Summary</p>
           <ul className="mt-4 space-y-3">
             {cartItems.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-3">
+              <li key={item.cartKey} className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
                   <img
                     src={resolveImageSrc(item.image)}
                     onError={applyImageFallback}
                     alt={item.name}
+                    loading="lazy"
                     className="h-12 w-12 rounded-lg object-cover"
                   />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-stone-900">{item.name}</p>
-                    <p className="text-xs text-stone-500">x{item.quantity}</p>
+                    <div className="flex flex-wrap items-center gap-1 mt-0.5">
+                      <p className="text-xs text-stone-500">x{item.quantity}</p>
+                      {item.color && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-1.5 py-px text-[10px] text-stone-500">
+                          <span className="h-2 w-2 rounded-full border border-stone-300" style={{ backgroundColor: item.colorHex }} />
+                          {item.color}
+                        </span>
+                      )}
+                      {item.size && (
+                        <span className="inline-flex items-center rounded-full border border-stone-200 bg-stone-50 px-1.5 py-px text-[10px] text-stone-500">
+                          {item.size}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <p className="text-sm text-stone-700">{formatTHB(item.price * item.quantity)}</p>

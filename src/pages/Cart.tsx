@@ -43,23 +43,42 @@ export default function Cart() {
           <ul className="space-y-4">
             {cartItems.map((item) => (
               <li
-                key={item.id}
+                key={item.cartKey}
                 className="flex flex-col gap-4 rounded-2xl border border-stone-200 bg-white p-4 sm:flex-row sm:items-center"
               >
                 <img
                   src={resolveImageSrc(item.image)}
                   onError={applyImageFallback}
                   alt={item.name}
+                  loading="lazy"
                   className="h-24 w-24 rounded-xl bg-white object-cover"
                 />
 
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-base font-semibold text-stone-900">{item.name}</p>
                   <p className="mt-1 text-sm text-stone-500">{formatTHB(item.price)} each</p>
+                  {(item.color || item.size) && (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      {item.color && (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] text-stone-600">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full border border-stone-300"
+                            style={{ backgroundColor: item.colorHex }}
+                          />
+                          {item.color}
+                        </span>
+                      )}
+                      {item.size && (
+                        <span className="inline-flex items-center rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] text-stone-600">
+                          Size {item.size}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <div className="mt-3 inline-flex items-center rounded-full border border-stone-300 bg-white">
                     <button
-                      onClick={() => updateDecreaseQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateDecreaseQuantity(item.cartKey, item.quantity - 1)}
                       disabled={item.quantity <= 1}
                       className="rounded-l-full p-2 text-stone-700 hover:bg-stone-200"
                     >
@@ -67,7 +86,7 @@ export default function Cart() {
                     </button>
                     <span className="w-10 text-center text-sm font-medium text-stone-900">{item.quantity}</span>
                     <button
-                      onClick={() => updateIncreaseQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateIncreaseQuantity(item.cartKey, item.quantity + 1)}
                       className="rounded-r-full p-2 text-stone-700 hover:bg-stone-200"
                     >
                       <Plus className="h-4 w-4" />
@@ -78,7 +97,7 @@ export default function Cart() {
                 <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
                   <p className="text-sm font-semibold text-stone-900">{formatTHB(item.price * item.quantity)}</p>
                   <button
-                    onClick={() => removeFromCart(item.id)}
+                    onClick={() => removeFromCart(item.cartKey)}
                     className="rounded-full border border-red-200 p-2 text-red-500 transition hover:bg-red-50"
                     aria-label="remove"
                   >

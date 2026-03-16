@@ -4,12 +4,16 @@ import { useSnackbar } from "notistack";
 import type { ReactNode } from "react";
 
 export type CartItem = {
+  cartKey: string;
   id: number;
   name: string;
   price: number;
   image: string;
   quantity: number;
   stock: number;
+  color?: string;
+  colorHex?: string;
+  size?: string;
 };
 
 type StoreResult = {
@@ -22,9 +26,9 @@ type CartStore = {
   cartItems: CartItem[];
   clearCart: () => void;
   addToCartStore: (item: CartItem) => StoreResult;
-  updateIncreaseQuantityStore: (productId: number, newQty: number) => StoreResult;
-  updateDecreaseQuantityStore: (productId: number, newQty: number) => void;
-  removeFromCartStore: (productId: number) => StoreResult;
+  updateIncreaseQuantityStore: (cartKey: string, newQty: number) => StoreResult;
+  updateDecreaseQuantityStore: (cartKey: string, newQty: number) => void;
+  removeFromCartStore: (cartKey: string) => StoreResult;
 };
 
 const useCartStore = create<CartStore>((set) => ({
@@ -34,7 +38,7 @@ const useCartStore = create<CartStore>((set) => ({
     let result: StoreResult = { ok: true };
 
     set((state) => {
-      const exist = state.cartItems.find((product) => product.id === item.id);
+      const exist = state.cartItems.find((product) => product.cartKey === item.cartKey);
 
       if (exist) {
         const newQty = exist.quantity + item.quantity;
@@ -49,7 +53,7 @@ const useCartStore = create<CartStore>((set) => ({
 
         return {
           cartItems: state.cartItems.map((product) =>
-            product.id === item.id ? { ...product, quantity: newQty } : product
+            product.cartKey === item.cartKey ? { ...product, quantity: newQty } : product
           ),
         };
       }
@@ -68,11 +72,11 @@ const useCartStore = create<CartStore>((set) => ({
 
     return result;
   },
-  updateIncreaseQuantityStore: (productId, newQty) => {
+  updateIncreaseQuantityStore: (cartKey, newQty) => {
     let result: StoreResult = { ok: true };
 
     set((state) => {
-      const item = state.cartItems.find((cartItem) => cartItem.id === productId);
+      const item = state.cartItems.find((cartItem) => cartItem.cartKey === cartKey);
       if (!item) {
         return state;
       }
@@ -88,23 +92,23 @@ const useCartStore = create<CartStore>((set) => ({
 
       return {
         cartItems: state.cartItems.map((cartItem) =>
-          cartItem.id === productId ? { ...cartItem, quantity: newQty } : cartItem
+          cartItem.cartKey === cartKey ? { ...cartItem, quantity: newQty } : cartItem
         ),
       };
     });
 
     return result;
   },
-  updateDecreaseQuantityStore: (productId, newQty) => {
+  updateDecreaseQuantityStore: (cartKey, newQty) => {
     set((state) => ({
       cartItems: state.cartItems.map((item) =>
-        item.id === productId ? { ...item, quantity: Math.max(1, newQty) } : item
+        item.cartKey === cartKey ? { ...item, quantity: Math.max(1, newQty) } : item
       ),
     }));
   },
-  removeFromCartStore: (productId) => {
+  removeFromCartStore: (cartKey) => {
     set((state) => ({
-      cartItems: state.cartItems.filter((item) => item.id !== productId),
+      cartItems: state.cartItems.filter((item) => item.cartKey !== cartKey),
     }));
 
     return {
@@ -143,8 +147,8 @@ export function useCart() {
   );
 
   const updateIncreaseQuantity = useCallback(
-    (productId: number, newQty: number) => {
-      const result = updateIncreaseQuantityStore(productId, newQty);
+    (cartKey: string, newQty: number) => {
+      const result = updateIncreaseQuantityStore(cartKey, newQty);
       if (!result.ok && result.message) {
         enqueueSnackbar(result.message, { variant: result.variant || "warning" });
       }
@@ -153,15 +157,15 @@ export function useCart() {
   );
 
   const updateDecreaseQuantity = useCallback(
-    (productId: number, newQty: number) => {
-      updateDecreaseQuantityStore(productId, newQty);
+    (cartKey: string, newQty: number) => {
+      updateDecreaseQuantityStore(cartKey, newQty);
     },
     [updateDecreaseQuantityStore]
   );
 
   const removeFromCart = useCallback(
-    (productId: number) => {
-      const result = removeFromCartStore(productId);
+    (cartKey: string) => {
+      const result = removeFromCartStore(cartKey);
       if (result.message) {
         enqueueSnackbar(result.message, { variant: result.variant || "info" });
       }

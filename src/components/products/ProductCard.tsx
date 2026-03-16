@@ -24,7 +24,7 @@ export default function ProductCard({
   return (
     <Card className={className}>
       <Link to={`/product/${product.id}`} className="block">
-        <div className="relative h-56 overflow-hidden rounded-md bg-gray-400">
+        <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-gray-100">
           {isSale && (
             <span className="absolute left-2 top-2 z-10 rounded bg-red-600 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white">
               Sale
@@ -34,7 +34,8 @@ export default function ProductCard({
             src={resolveImageSrc(product.imageOne)}
             alt={product.name}
             onError={applyImageFallback}
-            className="h-56 w-full bg-gray-400 object-cover transition duration-500 group-hover:scale-105"
+            loading="lazy"
+            className="h-full w-full object-cover object-center transition duration-500 group-hover:scale-105"
           />
         </div>
       </Link>

@@ -25,6 +25,7 @@ export default function HomeHero({ heroRef, heroImgRef }: HomeHeroProps) {
             src="/images/hero-fashion.jpg"
             onError={applyImageFallback}
             alt="K Shop fashion model"
+            loading="eager"
             className="h-[40vh] md:h-[72vh] w-full object-cover object-top rounded-tl-[80px] rounded-br-[80px]"
           />
         </div>
