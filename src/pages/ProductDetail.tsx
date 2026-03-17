@@ -59,6 +59,8 @@ export default function ProductDetail() {
   const [selectedColor, setSelectedColor] = useState<ColorOption | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sizeError, setSizeError] = useState(false);
+  const [isZooming, setIsZooming] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 0, y: 0 });
 
   const colorOptions = COLOR_OPTIONS[product?.category ?? ""] ?? [];
   const sizeOptions = SIZE_OPTIONS[product?.category ?? ""] ?? [];
@@ -105,18 +107,44 @@ export default function ProductDetail() {
     }
   };
 
+  const handleZoomMouseMove = (e: React.MouseEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const rect = img.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="grid gap-8 rounded-3xl border border-stone-200 bg-white p-5 md:grid-cols-2 lg:p-8">
         <div>
-          <div className="aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gray-100">
+          <div className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gray-100 group">
             <img
               src={resolveImageSrc(currentImage)}
               onError={applyImageFallback}
               alt={product.name}
               loading="eager"
-              className="h-full w-full object-cover object-center"
+              className="h-full w-full object-cover object-center cursor-zoom-in transition-transform duration-300 group-hover:scale-[2] group-hover:cursor-none"
+              onMouseMove={handleZoomMouseMove}
+              onMouseEnter={() => setIsZooming(true)}
+              onMouseLeave={() => setIsZooming(false)}
+              style={{ transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` }}
             />
+
+            {isZooming && (
+              <div
+                className="absolute z-40 rounded-full border-2 border-stone-400 bg-black/10 pointer-events-none"
+                style={{
+                  width: "140px",
+                  height: "140px",
+                  left: `${zoomPos.x}%`,
+                  top: `${zoomPos.y}%`,
+                  transform: "translate(-50%, -50%)",
+                  boxShadow: "inset 0 0 20px rgba(0,0,0,0.3)",
+                }}
+              />
+            )}
           </div>
 
           <div className="mt-3 flex gap-2">
@@ -148,7 +176,6 @@ export default function ProductDetail() {
           <p className="text-2xl font-semibold text-stone-900">{formatTHB(product.price)}</p>
           <p className="leading-7 text-stone-600">{product.description}</p>
 
-          {/* Color selector */}
           {colorOptions.length > 0 && (
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.25em] text-stone-500">
@@ -181,7 +208,6 @@ export default function ProductDetail() {
             </div>
           )}
 
-          {/* Size selector */}
           {sizeOptions.length > 0 && (
             <div className="space-y-2">
               <p className={cn("text-xs uppercase tracking-[0.25em]", sizeError ? "text-red-500" : "text-stone-500")}>
